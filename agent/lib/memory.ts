@@ -13,6 +13,32 @@ function authHeader(): string | null {
   return `Basic ${Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString("base64")}`;
 }
 
+// Hydrate the sibling identifier (phone <-> whatsapp) so the same person
+// on the other channel resolves to this profile on the next interaction.
+// Under GROUP_BY_PROFILE that keeps SMS and WhatsApp in one conversation.
+export async function linkCrossChannelIdentity(
+  profileId: string,
+  address: string,
+  channel: string | undefined,
+): Promise<void> {
+  const auth = authHeader();
+  const storeId = process.env.MEMORY_STORE_ID;
+  if (!auth || !storeId) return;
+
+  const phone = extractE164(address);
+  if (!phone) return;
+
+  const sibling = channel === "WHATSAPP"
+    ? { idType: "phone", value: phone }
+    : { idType: "whatsapp", value: `whatsapp:${phone}` };
+
+  await fetch(`${BASE}/Stores/${storeId}/Profiles/${profileId}/Identifiers`, {
+    method: "POST",
+    headers: { Authorization: auth, "Content-Type": "application/json" },
+    body: JSON.stringify(sibling),
+  });
+}
+
 // Twilio treats `phone` and `whatsapp` as separate identity types, so
 // Orchestrator creates the profile under whichever channel arrived first.
 // Try both when looking up.

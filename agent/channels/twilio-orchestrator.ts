@@ -2,6 +2,7 @@
 import { defineChannel, POST } from "eve/channels";
 import { resolveTwilioAuthToken, sendTwilioMessage, type TwilioChannelCredentials } from "eve/channels/twilio";
 import twilio from "twilio";
+import { linkCrossChannelIdentity } from "../lib/memory";
 
 const publicOrigin = process.env.PUBLIC_BASE_URL!;
 const credentials: TwilioChannelCredentials = {};
@@ -23,6 +24,10 @@ type WebhookEvent = {
     author?: { address?: string; channel?: string; participantId?: string };
     content?: { type: "TEXT" | "TRANSCRIPTION"; text?: string };
     recipients?: Array<{ address?: string; channel?: string }>;
+    // PARTICIPANT_ADDED shape
+    type?: string;
+    profileId?: string;
+    addresses?: Array<{ channel?: string; address?: string }>;
   };
 };
 
@@ -60,6 +65,19 @@ export default defineChannel({
       // ...continued from above
       const ok = new Response("ok", { status: 200 });
       const event = JSON.parse(rawBody) as WebhookEvent;
+
+      // Hydrate the sibling identifier (phone <-> whatsapp) on the CUSTOMER's
+      // profile so the next inbound on the other channel resolves to this same
+      // profile and, under GROUP_BY_PROFILE, joins the same conversation.
+      if (event.eventType === "PARTICIPANT_ADDED") {
+        const d = event.data;
+        const addr = d?.addresses?.[0];
+        if (d?.type === "CUSTOMER" && d.profileId && addr?.address) {
+          waitUntil(linkCrossChannelIdentity(d.profileId, addr.address, addr.channel));
+        }
+        return ok;
+      }
+
       if (event.eventType !== "COMMUNICATION_CREATED") return ok;
 
       const { conversationId, author, content, recipients } = event.data ?? {};
