@@ -16,6 +16,7 @@ function authHeader(): string | null {
 // Hydrate the sibling identifier (phone <-> whatsapp) so the same person
 // on the other channel resolves to this profile on the next interaction.
 // Under GROUP_BY_PROFILE that keeps SMS and WhatsApp in one conversation.
+// See the blog post [TBD] for the full walkthrough.
 export async function linkCrossChannelIdentity(
   profileId: string,
   address: string,
