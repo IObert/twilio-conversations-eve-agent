@@ -1,0 +1,35 @@
+// Illustrative only — NOT used by this project.
+//
+// eve ships a built-in Twilio channel adapter that wires up SMS/MMS and a
+// basic voice flow with a single import. For a proof-of-concept it's great:
+//
+//   import { twilioChannel } from "eve/channels/twilio";
+//
+//   export default twilioChannel({
+//     allowFrom: "*",
+//     messaging: { from: "*" },
+//     async onText(ctx, message) {
+//       await ctx.twilio.sendMessage(`Copy: ${message.body}`);
+//       return null;
+//     },
+//   });
+//
+// We deliberately do NOT use it here. Once you push on it, you hit a ceiling:
+//
+//  - No inbound media. The parser reads Twilio's MediaUrl* fields but never
+//    forwards them to the model, so MMS images are dropped.
+//  - Voice is a workaround. <Gather> prompts a single utterance, terminates
+//    the call, and feeds the transcript back as SMS. That's not a continuous
+//    conversation.
+//  - Session identity is per phone number. SMS from $TWILIO_SMS_NUMBER and
+//    WhatsApp from $TWILIO_WHATSAPP_NUMBER get treated as two different
+//    people, with two separate transcripts.
+//  - You lose everything Twilio Conversations gives you. No Orchestrator
+//    grouping, no Memory Store lookups, no Intelligence observations. The
+//    adapter talks to the raw Twilio Messaging API, not the Conversations
+//    platform.
+//
+// Instead, this project uses `twilio-orchestrator.ts`, which subscribes to
+// Twilio Conversations Orchestrator webhooks (GROUP_BY_PROFILE) so SMS and
+// WhatsApp from the same person land in one conversation, media is preserved,
+// and Memory Store / Intelligence stay in the loop.
