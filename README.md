@@ -53,13 +53,16 @@ You'll need a handful of things before you start:
 
 ## Getting started
 
-Follow the blog post — it covers prerequisites, Twilio provisioning (Memory Store + Orchestrator Configuration with `GROUP_BY_PROFILE`), env vars, and ngrok setup. When you're ready to run the agent:
-
 ```bash
 pnpm install
-cp .env.example .env    # fill in the values
+cp .env.example .env    # fill in the values (see below)
+pnpm provision          # creates the Memory Store + Orchestrator Configuration
 pnpm dev
 ```
+
+**Fill in `.env` first.** The blog post explains where each value comes from: your Twilio credentials, sender numbers, model key, and `PUBLIC_BASE_URL` (your ngrok URL, which must be running before you provision because it's registered as the Orchestrator webhook).
+
+`pnpm provision` ([scripts/provision.mjs](scripts/provision.mjs)) calls the same Twilio APIs as the curl commands in the blog post. It creates the Memory Store and the Orchestrator Configuration (`GROUP_BY_PROFILE`, SMS + WhatsApp capture rules), waits for both async operations to finish, and writes `MEMORY_STORE_ID` and `ORCHESTRATOR_CONFIG_ID` into `.env`. It's safe to re-run: ids that are already set are reused. If your ngrok URL changes, update the webhook URL on the Configuration in the Twilio Console or create a fresh one.
 
 ## License
 
