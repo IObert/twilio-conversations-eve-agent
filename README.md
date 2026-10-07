@@ -13,19 +13,7 @@ A multi-channel AI agent that unifies **SMS and WhatsApp** into a single convers
 
 ## Architecture
 
-```
-      ┌───────────────────── Twilio Conversations ─────────────────────┐
-SMS ──▶│  Orchestrator  ──▶  Memory Store  ──▶  Intelligence           │
-WhatsApp ──▶ (GROUP_BY_PROFILE)  (traits + observations)  (extraction) │
-      └────────────────┬───────────────────────────────────────────────┘
-                       │ COMMUNICATION_CREATED webhook
-                       ▼
-              ┌────────────────────┐
-              │        eve         │
-              │  session transcript│  ──▶  any AI SDK model
-              │  dynamic prompt    │
-              └────────────────────┘
-```
+![Architecture: one customer on SMS and WhatsApp flows through Twilio Conversations (Orchestrator, Memory Store, Intelligence) to eve, and the reply goes back on the same channel](architecture.png)
 
 Short-term memory (this conversation) lives in eve. Long-term memory (this customer, across every past conversation) lives in Twilio.
 
@@ -50,6 +38,18 @@ Two files carry the interesting logic: [agent/channels/twilio-orchestrator.ts](a
 ## Why not the built-in `twilioChannel()`?
 
 eve ships a `twilioChannel()` adapter that gets you a working SMS agent in ~10 lines. It's the right starting point for a POC, but it drops MMS media, treats voice as a single `<Gather>` turn, and gives every phone number its own session identity — so SMS and WhatsApp from the same person become two separate customers. See [agent/channels/twilio-builtin.ts.example](agent/channels/twilio-builtin.ts.example) for the full contrast. The blog post explains the tradeoffs.
+
+## Prerequisites
+
+You'll need a handful of things before you start:
+
+- [Node.js](https://nodejs.org/en/download) 24 or newer
+- A Twilio account with an **Account SID** and **Auth Token** (find both in the [Twilio Console](https://console.twilio.com))
+- At least one SMS-capable Twilio phone number
+- A [WhatsApp sender](https://www.twilio.com/docs/whatsapp/self-sign-up) attached to a phone number. It can be the same number you use for SMS, or a second dedicated number. Both work with this setup.
+- An OpenAI API key, or your provider of choice ([any AI SDK provider](https://ai-sdk.dev/providers/ai-sdk-providers) works)
+- A shell for the provisioning calls. macOS and Linux ship with `curl`. On Windows, every provisioning command in the blog post also has a PowerShell version using `Invoke-RestMethod`, so no extra tooling is needed; if you'd rather run the `curl` versions verbatim, use WSL or Git Bash.
+- [ngrok](https://ngrok.com/) or a similar tool for local webhook tunneling. If you haven't used it before, ngrok gives you a public HTTPS URL that forwards to a port on your laptop, so Twilio can reach your webhook while you develop.
 
 ## Getting started
 
