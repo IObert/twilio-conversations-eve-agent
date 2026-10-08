@@ -2,7 +2,7 @@
 
 A multi-channel AI agent that unifies **SMS and WhatsApp** into a single conversation and remembers customers across sessions — built with [eve](https://eve.dev) and [Twilio Conversations](https://www.twilio.com/en-us/blog/developers/tutorials/product/orchestrate-multi-call-conversations-with-llm-twilio-conversation-memory).
 
-> **This repo is the companion project to the blog post [TBD — link]**, which walks through every file end-to-end. The README stays minimal on purpose. Read the post for the *why*; read the code for the *how*.
+> **This repo is the companion project to the [blog post](https://www.twilio.com/en-us/blog/developers/building-agent-twilio-conversations-eve)**, which walks through every file end-to-end. The README stays minimal on purpose. Read the post for the *why*; read the code for the *how*.
 
 ## What it does
 
